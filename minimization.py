@@ -14,7 +14,7 @@ class Minimize:
     def __init__(self, x0, func, grid_data,
                  fix_teff=False, fix_logg=False, fix_feh=False, fix_vt=False,
                  iterations=160, EPcrit=0.001, RWcrit=0.003, ABdiffcrit=0.01,
-                 GUI=True, **kwargs):
+                 FEHcrit=0.1, GUI=True, **kwargs):
         self.x0 = x0
         self.func = func
         self.grid_data= grid_data
@@ -30,6 +30,7 @@ class Minimize:
         self.EPcrit = EPcrit
         self.RWcrit = RWcrit
         self.ABdiffcrit = ABdiffcrit
+        self.FEHcrit = FEHcrit
         self.GUI = GUI
         self.bounds = [self.teffv[0]+1, self.teffv[-1]-1, self.loggv[0]+0.01, self.loggv[-1]-0.01, self.fehv[0]+0.01, self.fehv[-1]-0.01, self.vturv[0]+0.01, self.vturv[-1]-0.01]
 
@@ -72,12 +73,13 @@ class Minimize:
         self.slopeEP = 0.00 if self.fix_teff else self.slopeEP
         self.slopeRW = 0.00 if self.fix_vt else self.slopeRW
         self.Abdiff = 0.00 if self.fix_logg else self.Abdiff
-        self.x0[2] = fe_input if self.fix_feh else self.x0[2]
+        self.x0[2] = 0.00 if self.fix_feh else self.x0[2]
 
         cond1 = abs(self.slopeRW) <= self.RWcrit
         cond2 = abs(self.Abdiff) <= self.ABdiffcrit
         cond3 = abs(self.slopeEP) <= self.EPcrit
-        cond4 = round(fe_input, 2) == round(self.x0[2], 2)
+#        cond4 = round(fe_input, 2) == round(self.x0[2], 2)
+        cond4 = abs(fe_input) <= self.FEHcrit
         return cond1 and cond2 and cond3 and cond4
 
 
@@ -134,14 +136,14 @@ class Minimize:
             # Step for logg
             if (abs(self.Abdiff) >= self.ABdiffcrit) and not self.fix_logg:
                 s = -np.sign(self.Abdiff)
-                step_i = s * abs(self.Abdiff)
+                step_i = s * abs(self.Abdiff) * 0.1
                 step_i = s*0.01 if abs(step_i) < 0.01 else step_i
                 self.x0[1] += step_i
                 self.check_bounds(3)
 
             # Step for [Fe/H]
             if not self.fix_feh:
-                self.x0[2] = abundances[0]
+                self.x0[2] += abundances[0]*0.1
                 self.check_bounds(5)
 
             if self.fix_vt:
