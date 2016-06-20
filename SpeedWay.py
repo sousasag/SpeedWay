@@ -2,15 +2,12 @@
 
 ##imports:
 import sys
-import subprocess
-import os
 import numpy as np
-import glob
 import time
 import pickle
 import scipy.stats as sst
+import argparse
 
-import numpy as np
 import matplotlib.cm as cm
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
@@ -696,27 +693,29 @@ def get_parameters_moogme_min(file_ares, file_ews):
 
 
 
+def _parser():
+    parser = argparse.ArgumentParser(description='Fast parameters!')
+    parser.add_argument('ares', help='ARES file')
+    parser.add_argument('-g', '--grid', help='EW grid', default='data2_kur.pkl')
+    return parser.parse_args()
 
 
 ### Main program:
 def main():
 
-  file_ews = 'data2_kur.pkl'
+  args = _parser()
+  file_ews = args.grid
 #  file_ews = 'data2_mar.pkl'
-
-  file_ares = 'test_stars/HD128620.ares'
-
+  file_ares = args.ares
   get_parameters_moogme_min(file_ares, file_ews)
-
   return
 
 
   teff, logg, feh, vtur = get_parameters_physics(file_ares, file_ews)
   print "Result : Teff: %d ; logg: %5.2f ; [Fe/H]: %5.2f ; vtur: %5.2f \n" % (teff, logg, feh, vtur)
-  i = raw_input("Press any key to continue...  ").split
+  i = raw_input("Press any key to continue...  ").split()
 
 
 
 if __name__ == "__main__":
     main()
-
