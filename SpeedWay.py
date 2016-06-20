@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.cm as cm
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm 
+from matplotlib.colors import LogNorm
 
 
 from itertools import product
@@ -70,13 +70,12 @@ def get_interpolated_ews(teff,logg,feh,vtur, teffv, loggv, fehv, vturv, ewdata):
   """
   Get the list of EWs interpolated given the parameters for the models
   """
-  point = np.array([teff, logg, feh, vtur])
-  ewintv = [interpolator((teffv, loggv, fehv, vturv), ewdata[:,:,:,:,i], point) for i in range(ewdata.shape[-1])]
+  ewintv = [get_interpolated_ew(teff,logg,feh,vtur, teffv, loggv, fehv, vturv, ewdata[:,:,:,:,i]) for i in range(ewdata.shape[-1])]
   return np.array(ewintv)
 
 
 
-# Evaluation functions 
+# Evaluation functions
 
 def func_min(x, teffv, loggv, fehv, vturv, ewdata, ew_obs):
   """
@@ -90,7 +89,7 @@ def func_min(x, teffv, loggv, fehv, vturv, ewdata, ew_obs):
 
 def func_eval(llv, epv, ionv, ew_model, ew_obs):
   """
-  Evaluation function based on the slopes of EP and RW 
+  Evaluation function based on the slopes of EP and RW
   and differences between FeI and FeII
   """
   indexes_feh1 = np.where(ionv == 0)[0]
@@ -131,7 +130,7 @@ def func_min_physics(x, teffv, loggv, fehv, vturv, ewdata, llv, epv, ionv, ew_ob
   return fval
 
 def dEW(EW, SNR, dl=0.1):
-  """ 
+  """
   Calculate the error on EW from Caryl 1988
   """
   # EW and dl have to be the same unit
@@ -139,7 +138,7 @@ def dEW(EW, SNR, dl=0.1):
 
 
 def noise(EW, SNR, dl=0.1):
-  """ 
+  """
   Calculate and extract a value from a normal distribution with
   center at a give EW, and with the width from the equation above
   """
@@ -240,7 +239,7 @@ def compute_funcphy_mat(teffv, loggv, fehv, vturv, llv, epv, loggfv, ionv, ewdat
 
 def compute_funcphy_mat_fast(teffv, loggv, fehv, vturv, llv, epv, loggfv, ionv, ewdata, ew_test_data):
   """
-  Compute the evaluation function mat for all the grid 
+  Compute the evaluation function mat for all the grid
   using a fast? function evaluation
   """
   indexes_feh1 = np.where(ionv == 0)[0]
@@ -288,7 +287,7 @@ def compute_funcphy_mat2(teffv, loggv, fehv, vturv, llv, epv, loggfv, ionv, ewda
 
 def compute_funcphy_mat_local(teffv, loggv, fehv, vturv, llv, epv, loggfv, ionv, ewdata, ew_test_data, teff_guess, feh_guess):
   """
-  Compute the evaluation function value mat 
+  Compute the evaluation function value mat
   for some local points of the grid around initial guess for
   teff and feh
   """
@@ -301,7 +300,7 @@ def compute_funcphy_mat_local(teffv, loggv, fehv, vturv, llv, epv, loggfv, ionv,
   lg = 4.0
   vg = 1.2
 
-# Ramirez 2013    
+# Ramirez 2013
 #  vtur = 1.163 + 7.808e-4 * (teff - 5800) - 0.494*(logg - 4.30) - 0.05*feh
 # Tsantaki 2013
 #  vg = 6.932e-4*tg - 0.348*lg - 1.437
@@ -314,7 +313,7 @@ def compute_funcphy_mat_local(teffv, loggv, fehv, vturv, llv, epv, loggfv, ionv,
     for j in range(len(loggv)):
       for k in range(len(fehv)):
         for l in range(len(vturv)):
-          if abs(teffv[i] - tg) < dt and abs(loggv[j] - lg) < dl and abs(fehv[k] - fg) < df and abs(vturv[l] - vg) < dv : 	
+          if abs(teffv[i] - tg) < dt and abs(loggv[j] - lg) < dl and abs(fehv[k] - fg) < df and abs(vturv[l] - vg) < dv :
             #print teffv[i], loggv[j], fehv[k], vturv[l]
             funcphy_mat[i,j,k,l] = func_eval(llv, epv, ionv, ewdata[i,j,k,l], ew_test_data)
             print teffv[i], loggv[j], fehv[k], vturv[l], funcphy_mat[i,j,k,l]
@@ -340,8 +339,8 @@ def get_n_min(nmin, teffv, loggv, fehv, vturv, llv, epv, loggfv, ewdata, chi_mat
 
 def get_n_min_average(nmin, teffv, loggv, fehv, vturv, llv, epv, loggfv, ewdata, chi_mat, p_mat):
   """
-  Get the weighted averaged point in the grid with the least chisquare, 
-  and print the nmin minumum points  
+  Get the weighted averaged point in the grid with the least chisquare,
+  and print the nmin minumum points
   """
   print chi_mat.min()
   print chi_mat.argmin()
@@ -376,7 +375,7 @@ def plot_physical_dependences(llv, epv, ew_model, ew_obs):
   """
   Plot the delta EW vs.  EP and RW
   """
-  
+
   fig = plt.figure(figsize=(9,12),frameon=False)
 
   # Make the plot FeI vs EP
@@ -470,13 +469,13 @@ def get_parameters_chi(file_ares, file_ews):
   x0 = np.array([teffm, loggm, fehm, vturm])
 
   t0 = time.time()
-#  res = minimize(func_min, x0, method='TNC', bounds =[(5000,6000),(4.0,4.45),(-0.5,0.5),(0.5,1.5)], 
-  res = minimize(func_min, x0, method='L-BFGS-B', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)], 
+#  res = minimize(func_min, x0, method='TNC', bounds =[(5000,6000),(4.0,4.45),(-0.5,0.5),(0.5,1.5)],
+  res = minimize(func_min, x0, method='L-BFGS-B', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)],
                 args =(teffv, loggv, fehv, vturv, ewdata, ew_test_data),#,
                 options={'ftol': 0.0001, 'disp': True})
 
 #def func_min_physics(x, teffv, loggv, fehv, vturv, ewdata, llv, epv, ionv, ew_obs):
-#  res = minimize(func_min_physics, x0, method='L-BFGS-B', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)], 
+#  res = minimize(func_min_physics, x0, method='L-BFGS-B', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)],
 #                args =(teffv, loggv, fehv, vturv, ewdata, llv, epv, ionv, ew_test_data),#,
 #                options={'ftol': 0.0001, 'disp': True})
 
@@ -548,12 +547,12 @@ def get_parameters_physics(file_ares, file_ews):
   epv = epv[indexes]
   loggfv = loggfv [indexes]
   ionv = ionv [indexes]
-  ewdata = ewdata [:,:,:,:,indexes]  
+  ewdata = ewdata [:,:,:,:,indexes]
 
 
   teffm, fehm = get_tmcalc_teff_feh(file_ares)
 
-  print teffm, fehm  
+  print teffm, fehm
 
  # Computing min func for all grid points
   t0 = time.time()
@@ -597,16 +596,16 @@ def get_parameters_physics(file_ares, file_ews):
   x0 = np.array([teffm, loggm, fehm, vturm])
 
   t0 = time.time()
-#  res = minimize(func_min, x0, method='TNC', bounds =[(5000,6000),(4.0,4.45),(-0.5,0.5),(0.5,1.5)], 
-#  res = minimize(func_min, x0, method='L-BFGS-B', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)], 
+#  res = minimize(func_min, x0, method='TNC', bounds =[(5000,6000),(4.0,4.45),(-0.5,0.5),(0.5,1.5)],
+#  res = minimize(func_min, x0, method='L-BFGS-B', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)],
 #                args =(teffv, loggv, fehv, vturv, ewdata, ew_test_data),#,
 #                options={'ftol': 0.0001, 'disp': False})
 
 #def func_min_physics(x, teffv, loggv, fehv, vturv, ewdata, llv, epv, ionv, ew_obs):Nelder-Mead
-  res = minimize(func_min_physics, x0, method='L-BFGS-B', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)], 
+  res = minimize(func_min_physics, x0, method='L-BFGS-B', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)],
                 args =(teffv, loggv, fehv, vturv, ewdata, llv, epv, ionv, ew_test_data),#,
                 options={'ftol': 0.0001, 'disp': True})
-#  res = minimize(func_min_physics, x0, method='Nelder-Mead', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)], 
+#  res = minimize(func_min_physics, x0, method='Nelder-Mead', bounds =[(4200,6500),(2.0,4.49),(-2,0.39),(0.01,2.9)],
 #                args =(teffv, loggv, fehv, vturv, ewdata, llv, epv, ionv, ew_test_data),#,
 #                options={'xtol': 0.1, 'maxfev' : 200})
 
@@ -627,7 +626,7 @@ def get_parameters_physics(file_ares, file_ews):
 
 def func_eval2(llv, epv, ionv, ew_model, ew_obs):
   """
-  Evaluation function based on the slopes of EP and RW 
+  Evaluation function based on the slopes of EP and RW
   and differences between FeI and FeII
   """
   indexes_feh1 = np.where(ionv == 0)[0]
@@ -676,7 +675,7 @@ def get_parameters_moogme_min(file_ares, file_ews):
   epv = epv[indexes]
   loggfv = loggfv [indexes]
   ionv = ionv [indexes]
-  ewdata = ewdata [:,:,:,:,indexes]  
+  ewdata = ewdata [:,:,:,:,indexes]
 
   teffm, fehm = get_tmcalc_teff_feh(file_ares)
 
@@ -709,7 +708,7 @@ def main():
 
   get_parameters_moogme_min(file_ares, file_ews)
 
-  return 
+  return
 
 
   teff, logg, feh, vtur = get_parameters_physics(file_ares, file_ews)
