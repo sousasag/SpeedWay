@@ -496,11 +496,9 @@ def read_grid(file_grid):
   Read binary grid into memory
   """
   t0 = time.time()
-  inputfile = open(file_grid, 'rb')
-  (teffv2, loggv2, fehv2, vturv2, llv2, epv2, loggfv2, ionv2, ewdata2) = pickle.load(inputfile)
-  inputfile.close()
-  t1 = time.time()
-  total3 = t1-t0
+  with open(file_grid, 'rb') as inputfile:
+      (teffv2, loggv2, fehv2, vturv2, llv2, epv2, loggfv2, ionv2, ewdata2) = pickle.load(inputfile)
+  total3 = time.time()-t0
   return (teffv2, loggv2, fehv2, vturv2, llv2, epv2, loggfv2, ionv2, ewdata2)
 
 
